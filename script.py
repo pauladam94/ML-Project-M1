@@ -245,15 +245,11 @@ transformation = [
     lambda img : convol(convol(img2BW(img),ker5),ker5),
 
     lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 2),
-
-
-    lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 3),
-
     
     lambda img : kmeans(convol(convol(img2BW(img),ker3),ker5), 2),
-
-    
-    lambda img : kmeans(convol(convol(img2BW(img),ker3),ker5), 3),
+    lambda img : kmeans(convol(convol(convol(img2BW(img),ker3),ker5),ker5), 2),
+    lambda img : kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2),
+    lambda img : kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker5), 2)
 
     ]
 
