@@ -9,6 +9,8 @@ import numpy as np
 import random as rd
 from scipy import ndimage
 
+from sklearn.cluster import KMeans
+
 # Load the images from the compressed CSV file
 with gzip.open('x_train.csv.gz', 'rb') as f:
     x_train = np.loadtxt(f, delimiter=',').astype(np.int64)
@@ -16,7 +18,7 @@ with gzip.open('x_train.csv.gz', 'rb') as f:
 # Load the labels from the compressed CSV file
 with gzip.open('y_train.csv.gz', 'rb') as f:
     y_train = np.loadtxt(f, delimiter=',', dtype=int)
-    print(x_train)
+    #print(x_train)
 
 def img2BW(img):
     x, y, c = img.shape
@@ -77,6 +79,31 @@ def shift_right(img):
             img_[i][j+1] = img[i][j]
     return(img_)
 
+def kmeans(image, n_clusters):
+    # Reshape the image to be a list of pixels
+    image_5d = np.zeros((image.shape[0] * image.shape[1], 3))
+
+    # first column: x pixel value
+    # second column: y pixel value
+    # third column: luminance pixel value
+    for i in range(image.shape[0] * image.shape[1]):
+        image_5d[i, 0] = i % image.shape[0]
+        image_5d[i, 1] = i // image.shape[0]
+        image_5d[i, 2] = image[i % image.shape[0], i // image.shape[0]]
+
+    # Perform k-means clustering
+    k_means = KMeans(n_clusters=n_clusters)
+    k_means.fit(image_5d)
+
+    # Get the label of each cluster
+    labels = k_means.labels_
+
+    segmented_image = np.zeros(image.shape)
+    for i in range(image.shape[0] * image.shape[1]):
+        x = i % image.shape[0]
+        y = i // image.shape[0]
+        segmented_image[x, y] = 255 * np.mean(labels[i]) / (n_clusters - 1)
+    return segmented_image
 
 
 def threshold(img):
@@ -103,7 +130,7 @@ def threshold(img):
             #pass
     for i in range(x):
         for j in range(y):
-            img_[i][j][0] = (img_[i][j][0])//3
+            img_[i][j][0] = (img_[i][j][0])//10
     return(img_)
 
 sobel = np.array([
@@ -113,25 +140,24 @@ sobel = np.array([
 ])
 
 ker3 = np.array([
-    [0,1,0],
-    [1,10,1],
-    [0,1,0]
+    [0,3,0],
+    [3,10,3],
+    [0,3,0]
 ])
 ker3 = ker3 / np.sum(ker3)
 
 ker5 = np.array([
-    [-1,0, 1, 1, 2],
+    [0,0, 1, 2, 1],
     [0,0, 10,5, 0],
-    [1,10,20,10,1],
+    [1,7,20,7,1],
     [0,5 ,10,0, 0],
-    [2,1, 1, 0, -1]
+    [1,2, 1, 0, 0]
 ])
 ker5 = ker5 / np.sum(ker5)
 
 
 
-
-def load_info_data_set():
+def load_info_data_set(transformation):
     # Load the images from the compressed CSV file
     with gzip.open('x_train.csv.gz', 'rb') as f:
         x_train = np.loadtxt(f, delimiter=',').astype(np.int64)
@@ -143,29 +169,43 @@ def load_info_data_set():
     y_shape = y_train.shape
     shape_image = x_train[0].shape
 
-    print("Size X Train", x_shape)
-    print("Size Picture :", x_train[0].shape)
-    print("Size Y Train", y_shape)
-    print("Y Train", y_train[0])
-    fig = plt.figure(figsize=(8, 8))
-    columns = 5
-    rows = 5
-    for i in range(1, columns * rows + 1):
-        img_nb = rd.randint(0, y_shape[0])
-        img_nb = 0
-        fig.add_subplot(rows, columns, i)
-        fig.axes[i-1].set_title(y_train[img_nb])
-        fig.axes[i-1].set_axis_off()
-        img = x_train[img_nb]
-        
-        img = img2BW(img)
-        img = threshold(img)
-        img = convol(img,ker5)
-        img = threshold(img)
-        img = convol(img,ker3)
-        img = threshold(img)
+    #print("Size X Train", x_shape)
+    #print("Size Picture :", x_train[0].shape)
+    #print("Size Y Train", y_shape)
+    #print("Y Train", y_train[0])
 
-        plt.imshow(img, cmap='gray')
+    columns = 20
+    rows = len(transformation)
+    fig = plt.figure()
+    gs = fig.add_gridspec(rows + 1, columns, hspace=0, wspace=0)
+    axs = gs.subplots(sharex='col', sharey='row')
+    fig.suptitle('Different transformations of the same image')
+
+    for i in range(0, columns):
+        img_nb = rd.randint(0, y_shape[0])
+        img = x_train[img_nb]
+        axs[0][i].imshow(img)
+        axs[0][i].set_title(y_train[img_nb])
+        j = 0
+        for transf in transformation:
+            j += 1
+            #print("Transformation ", j)
+            axs[j][i].imshow(transf(img), cmap='gray')
+
+    for ax in fig.get_axes():
+        ax.set_axis_off()
+        ax.label_outer()
+    fig.tight_layout()
     plt.show()
+
+transformation = [
+    lambda img : convol(convol(img2BW(img),ker5),ker5),
+    lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 2),
+    lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 3),
+    lambda img : convol(img,ker3),
+    lambda img : convol(img,ker5)
+    ]
+
+load_info_data_set(transformation)
 
 load_info_data_set()
