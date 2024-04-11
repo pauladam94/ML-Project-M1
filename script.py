@@ -155,6 +155,15 @@ ker5 = np.array([
 ])
 ker5 = ker5 / np.sum(ker5)
 
+ker5 = np.array([
+    [0,0, 0, 1, 1],
+    [0,0, 2,2, 0],
+    [0,2, 15,2,0],
+    [0,2 ,2,0, 0],
+    [1,1, 0, 0, 0]
+])
+ker5 = ker5 / np.sum(ker5)
+
 
 
 def load_info_data_set(transformation):
@@ -182,7 +191,7 @@ def load_info_data_set(transformation):
     fig.suptitle('Different transformations of the same image')
 
     for i in range(0, columns):
-        img_nb = rd.randint(0, y_shape[0])
+        img_nb = rd.randint(0, y_shape[0]-1)
         img = x_train[img_nb]
         axs[0][i].imshow(img)
         axs[0][i].set_title(y_train[img_nb])
@@ -201,9 +210,7 @@ def load_info_data_set(transformation):
 transformation = [
     lambda img : convol(convol(img2BW(img),ker5),ker5),
     lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 2),
-    lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 3),
-    lambda img : convol(img,ker3),
-    lambda img : convol(img,ker5)
+    lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 3)
     ]
 
 load_info_data_set(transformation)
