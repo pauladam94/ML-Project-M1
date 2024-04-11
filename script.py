@@ -39,7 +39,47 @@ def convol(img, ker):
             img_[i][j][0] = val
     return(img_)
 
-def threshold(img,v):
+
+def shift_up(img):
+    x, y, c = img.shape
+    img_ = np.zeros([x,y,1],dtype=np.int64)
+    img_[x-1] = img[0]
+    for i in range(x-1):
+        img_[i] = img[i+1]
+    return(img_)
+
+
+def shift_down(img):
+    x, y, c = img.shape
+    img_ = np.zeros([x,y,1],dtype=np.int64)
+    img_[0] = img[x-1]
+    for i in range(x-1):
+        img_[i+1] = img[i]
+    return(img_)
+
+def shift_left(img):
+    x, y, c = img.shape
+    img_ = np.zeros([x,y,1],dtype=np.int64)
+    img_[x-1] = img[0]
+    for i in range(x):
+        img_[i][y-1] = img[i][0]
+        for j in range(y-1):
+            img_[i][j] = img[i][j+1]
+    return(img_)
+
+def shift_right(img):
+    x, y, c = img.shape
+    img_ = np.zeros([x,y,1],dtype=np.int64)
+    img_[x-1] = img[0]
+    for i in range(x):
+        img_[i][0] = img[i][y-1]
+        for j in range(y-1):
+            img_[i][j+1] = img[i][j]
+    return(img_)
+
+
+
+def threshold(img):
     x, y, c = img.shape
     img_ = np.zeros([x,y,1],dtype=np.int64)
     min=100000
@@ -59,11 +99,11 @@ def threshold(img,v):
     #std =  ndimage.standard_deviation(img_)
     for i in range(x):
         for j in range(y):
-            #val = np.sqrt(val)
-            pass
+            val = np.sqrt(val)
+            #pass
     for i in range(x):
         for j in range(y):
-            img_[i][j][0] = (img_[i][j][0])//10
+            img_[i][j][0] = (img_[i][j][0])//3
     return(img_)
 
 sobel = np.array([
@@ -72,21 +112,21 @@ sobel = np.array([
     [-1,0,1]
 ])
 
-ker = np.array([
-    [1,3,1],
-    [3,10,3],
-    [1,3,1]
+ker3 = np.array([
+    [0,1,0],
+    [1,10,1],
+    [0,1,0]
 ])
-ker = ker / np.sum(ker)
+ker3 = ker3 / np.sum(ker3)
 
-#ker = np.array([
-#    [0,0,1,0,0],
-#    [0,5,10,5,0],
-#    [1,10,20,10,1],
-#    [0,5,10,5,0],
-#    [0,0,1,0,0]
-#])
-#ker = ker / np.sum(ker)
+ker5 = np.array([
+    [-1,0, 1, 1, 2],
+    [0,0, 10,5, 0],
+    [1,10,20,10,1],
+    [0,5 ,10,0, 0],
+    [2,1, 1, 0, -1]
+])
+ker5 = ker5 / np.sum(ker5)
 
 
 
@@ -112,13 +152,19 @@ def load_info_data_set():
     rows = 5
     for i in range(1, columns * rows + 1):
         img_nb = rd.randint(0, y_shape[0])
+        img_nb = 0
         fig.add_subplot(rows, columns, i)
         fig.axes[i-1].set_title(y_train[img_nb])
         fig.axes[i-1].set_axis_off()
         img = x_train[img_nb]
+        
         img = img2BW(img)
-        img = convol(img,ker)
-        img = threshold(img, 0.1)
+        img = threshold(img)
+        img = convol(img,ker5)
+        img = threshold(img)
+        img = convol(img,ker3)
+        img = threshold(img)
+
         plt.imshow(img, cmap='gray')
     plt.show()
 
