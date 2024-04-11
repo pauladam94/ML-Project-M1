@@ -25,6 +25,14 @@ def img2BW(img):
     img_ = np.zeros([x,y,1],dtype=np.int64)
     for i in range(x):
         for j in range(y):
+            img_[i][j][0] = 0.333*img[i][j][0]  + 0.333*img[i][j][1] + 0.333*img[i][j][2]
+    return(img_)
+
+def luminance(img):
+    x, y, c = img.shape
+    img_ = np.zeros([x,y,1],dtype=np.int64)
+    for i in range(x):
+        for j in range(y):
             img_[i][j][0] = 0.2126*img[i][j][0]  + 0.7152*img[i][j][1] + 0.0722*img[i][j][2]
     return(img_)
 
@@ -41,6 +49,8 @@ def convol(img, ker):
             img_[i][j][0] = val
     return(img_)
 
+
+# -------- DATA AUGMENTATION FUNCTIONS --------
 
 def shift_up(img):
     x, y, c = img.shape
@@ -79,30 +89,54 @@ def shift_right(img):
             img_[i][j+1] = img[i][j]
     return(img_)
 
+def binom(a):
+    return (rd.randint(0,2*a)+rd.randint(0,2*a)+rd.randint(0,2*a)-3*a)
+
+#def add_noise(img):
+ #   x, y, c = img.shape
+  #  img_ = np.zeros([x,y,1],dtype=np.int64)
+   # for i in range(x):
+    #    for j in range(y-1):
+     #       for c in range(3):
+      #          r = binom(6)
+       #         i = img[i][j][c] + r
+        #        print(i)
+         #       if i>255:
+          #          img_[i][j][c]=255
+           #     elif i<0:
+            #        img_[i][j][c] = 0
+             #   else :
+              #      img_[i][j][c] = i
+#    return(img_)
+
 def kmeans(image, n_clusters):
     # Reshape the image to be a list of pixels
-    image_5d = np.zeros((image.shape[0] * image.shape[1], 3))
+    image_3d = np.zeros((image.shape[0] * image.shape[1], 3))
 
     # first column: x pixel value
     # second column: y pixel value
     # third column: luminance pixel value
     for i in range(image.shape[0] * image.shape[1]):
-        image_5d[i, 0] = i % image.shape[0]
-        image_5d[i, 1] = i // image.shape[0]
-        image_5d[i, 2] = image[i % image.shape[0], i // image.shape[0]]
+        image_3d[i, 0] = i % image.shape[0]
+        image_3d[i, 1] = i // image.shape[0]
+        image_3d[i, 2] = image[i % image.shape[0], i // image.shape[0]][0]
 
     # Perform k-means clustering
     k_means = KMeans(n_clusters=n_clusters)
-    k_means.fit(image_5d)
+    k_means.fit(image_3d)
 
     # Get the label of each cluster
     labels = k_means.labels_
+    centers = k_means.cluster_centers_
+    labels_center = np.zeros(n_clusters)
+    for i in range(n_clusters):
+        labels_center[i] = image_3d[labels == i][:, 2].mean()
 
     segmented_image = np.zeros(image.shape)
     for i in range(image.shape[0] * image.shape[1]):
         x = i % image.shape[0]
         y = i // image.shape[0]
-        segmented_image[x, y] = 255 * np.mean(labels[i]) / (n_clusters - 1)
+        segmented_image[x, y] = labels_center[labels[i]]
     return segmented_image
 
 
@@ -188,7 +222,7 @@ def load_info_data_set(transformation):
     fig = plt.figure()
     gs = fig.add_gridspec(rows + 1, columns, hspace=0, wspace=0)
     axs = gs.subplots(sharex='col', sharey='row')
-    fig.suptitle('Different transformations of the same image')
+    fig.suptitle('Several transformations of the same image')
 
     for i in range(0, columns):
         img_nb = rd.randint(0, y_shape[0]-1)
@@ -209,8 +243,18 @@ def load_info_data_set(transformation):
 
 transformation = [
     lambda img : convol(convol(img2BW(img),ker5),ker5),
+
     lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 2),
-    lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 3)
+
+
+    lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 3),
+
+    
+    lambda img : kmeans(convol(convol(img2BW(img),ker3),ker5), 2),
+
+    
+    lambda img : kmeans(convol(convol(img2BW(img),ker3),ker5), 3),
+
     ]
 
 load_info_data_set(transformation)
