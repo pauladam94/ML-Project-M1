@@ -11,6 +11,22 @@ from scipy import ndimage
 
 from sklearn.cluster import KMeans
 
+import datetime
+
+from tensorflow.keras.datasets import fashion_mnist, cifar10
+from sklearn.model_selection import train_test_split
+
+from tensorflow.keras import Input
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Dense, Activation, Conv2D, MaxPooling2D, Flatten, Dropout, GlobalAveragePooling2D
+from tensorflow.keras.layers import RandomCrop, RandomFlip, RandomRotation, RandomZoom, RandomRotation, RandomContrast, RandomBrightness, RandomTranslation
+from tensorflow.keras.losses import SparseCategoricalCrossentropy, CategoricalCrossentropy
+from tensorflow.keras.optimizers import Adam, RMSprop, SGD
+from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
+
+from tensorflow.keras.applications import ResNet50
+
+
 # Load the images from the compressed CSV file
 with gzip.open('x_train.csv.gz', 'rb') as f:
     x_train = np.loadtxt(f, delimiter=',').astype(np.int64)
@@ -28,13 +44,13 @@ def img2BW(img):
             img_[i][j][0] = 0.333*img[i][j][0]  + 0.333*img[i][j][1] + 0.333*img[i][j][2]
     return(img_)
 
-def luminance(img):
-    x, y, c = img.shape
-    img_ = np.zeros([x,y,1],dtype=np.int64)
-    for i in range(x):
-        for j in range(y):
-            img_[i][j][0] = 0.2126*img[i][j][0]  + 0.7152*img[i][j][1] + 0.0722*img[i][j][2]
-    return(img_)
+# def luminance(img):
+#     x, y, c = img.shape
+#     img_ = np.zeros([x,y,1],dtype=np.int64)
+#     for i in range(x):
+#         for j in range(y):
+#             img_[i][j][0] = 0.2126*img[i][j][0]  + 0.7152*img[i][j][1] + 0.0722*img[i][j][2]
+#     return(img_)
 
 def convol(img, ker):
     x, y, c = img.shape
@@ -89,25 +105,6 @@ def shift_right(img):
             img_[i][j+1] = img[i][j]
     return(img_)
 
-def binom(a):
-    return (rd.randint(0,2*a)+rd.randint(0,2*a)+rd.randint(0,2*a)-3*a)
-
-#def add_noise(img):
- #   x, y, c = img.shape
-  #  img_ = np.zeros([x,y,1],dtype=np.int64)
-   # for i in range(x):
-    #    for j in range(y-1):
-     #       for c in range(3):
-      #          r = binom(6)
-       #         i = img[i][j][c] + r
-        #        print(i)
-         #       if i>255:
-          #          img_[i][j][c]=255
-           #     elif i<0:
-            #        img_[i][j][c] = 0
-             #   else :
-              #      img_[i][j][c] = i
-#    return(img_)
 
 def kmeans(image, n_clusters):
     # Reshape the image to be a list of pixels
@@ -140,38 +137,38 @@ def kmeans(image, n_clusters):
     return segmented_image
 
 
-def threshold(img):
-    x, y, c = img.shape
-    img_ = np.zeros([x,y,1],dtype=np.int64)
-    min=100000
-    max=-100000
-    for i in range(x):
-        for j in range(y):
-            if img[i][j][0]>max:
-                max = img[i][j][0]
-            if img[i][j][0]<min:
-                min = img[i][j][0]
-    f = max-min
+# def threshold(img):
+#     x, y, c = img.shape
+#     img_ = np.zeros([x,y,1],dtype=np.int64)
+#     min=100000
+#     max=-100000
+#     for i in range(x):
+#         for j in range(y):
+#             if img[i][j][0]>max:
+#                 max = img[i][j][0]
+#             if img[i][j][0]<min:
+#                 min = img[i][j][0]
+#     f = max-min
     
-    for i in range(x):
-        for j in range(y):
-            val = (img[i][j][0]-min)/f
-            img_[i][j][0] = val*100
-    #std =  ndimage.standard_deviation(img_)
-    for i in range(x):
-        for j in range(y):
-            val = np.sqrt(val)
-            #pass
-    for i in range(x):
-        for j in range(y):
-            img_[i][j][0] = (img_[i][j][0])//10
-    return(img_)
+#     for i in range(x):
+#         for j in range(y):
+#             val = (img[i][j][0]-min)/f
+#             img_[i][j][0] = val*100
+#     #std =  ndimage.standard_deviation(img_)
+#     for i in range(x):
+#         for j in range(y):
+#             val = np.sqrt(val)
+#             #pass
+#     for i in range(x):
+#         for j in range(y):
+#             img_[i][j][0] = (img_[i][j][0])//10
+#     return(img_)
 
-sobel = np.array([
-    [-1,0,1],
-    [-2,0,2],
-    [-1,0,1]
-])
+# sobel = np.array([
+#     [-1,0,1],
+#     [-2,0,2],
+#     [-1,0,1]
+# ])
 
 ker3 = np.array([
     [0,3,0],
@@ -180,14 +177,14 @@ ker3 = np.array([
 ])
 ker3 = ker3 / np.sum(ker3)
 
-ker5 = np.array([
-    [0,0, 1, 2, 1],
-    [0,0, 10,5, 0],
-    [1,7,20,7,1],
-    [0,5 ,10,0, 0],
-    [1,2, 1, 0, 0]
-])
-ker5 = ker5 / np.sum(ker5)
+# ker5 = np.array([
+#     [0,0, 1, 2, 1],
+#     [0,0, 10,5, 0],
+#     [1,7,20,7,1],
+#     [0,5 ,10,0, 0],
+#     [1,2, 1, 0, 0]
+# ])
+# ker5 = ker5 / np.sum(ker5)
 
 ker5 = np.array([
     [0,0, 0, 1, 1],
@@ -241,19 +238,104 @@ def load_info_data_set(transformation):
     fig.tight_layout()
     plt.show()
 
-transformation = [
-    lambda img : convol(convol(img2BW(img),ker5),ker5),
+# transformation = [
+#     lambda img : convol(convol(img2BW(img),ker5),ker5),
 
-    lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 2),
+#     lambda img : kmeans(convol(convol(img2BW(img),ker5),ker5), 2),
     
-    lambda img : kmeans(convol(convol(img2BW(img),ker3),ker5), 2),
-    lambda img : kmeans(convol(convol(convol(img2BW(img),ker3),ker5),ker5), 2),
+#     lambda img : kmeans(convol(convol(img2BW(img),ker3),ker5), 2),
+#     lambda img : kmeans(convol(convol(convol(img2BW(img),ker3),ker5),ker5), 2),
    
-    lambda img : kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2),
-    lambda img : convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3)
+#     lambda img : kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2), # Ouiiiii
+#     lambda img : convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3)
+#     ]
 
-    ]
 
-load_info_data_set(transformation)
+# load_info_data_set(transformation)
 
-load_info_data_set()
+def denoise(img): # Taille image 32*32*3 -> 26*26*1
+    return (kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2))
+
+data_shape = [26,26,1]
+
+def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, lr=0.001, data_augmentation=False, from_ResNet=False, trainable_CNN=True):
+    """
+    Function to construct a Convolutional Neural Network (CNN).
+
+    Args:
+    layers: Tuple of lists specifying the number of filters for each convolutional layer and
+            the number of units for each dense layer. Default is ([32,64,64],[64]).
+    input_shape: Tuple representing the dimensions of the input data (height, width, channels).
+    output_dim: Integer indicating the number of output classes.
+    lr: Float representing the learning rate for the Adam optimizer. Default is 0.001.
+    data_augmentation: Boolean flag indicating whether data augmentation should be applied.
+                      Default is False.
+    from_ResNet: Boolean flag indicating whether to use pre-trained ResNet50 layers.
+                 Default is False.
+    trainable_CNN: Boolean flag indicating whether CNN layers should be trainable.
+                   Default is True.
+
+    Returns:
+    model: A compiled Keras model.
+    """
+    model = Sequential()
+
+    model.add(Input(shape=input_shape))
+
+    # data augmentation
+    if data_augmentation:
+      pass
+
+    # CNN layers
+    
+    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=data_shape))
+    model.add(MaxPooling2D(2,2))
+
+
+    # Flatten the data for dense layers
+
+    model.add(Flatten())
+
+    # Add dense layers
+    model.add(Dense(64, activation='relu'))
+    model.add(Dense(10, activation='relu'))
+    
+    # Output layer
+
+
+    # Compile the model
+    model.compile(optimizer=Adam(learning_rate=lr), loss=SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
+
+    return model
+
+
+cnn_model = build_CNN(lr=0.01)
+cnn_model.summary()
+
+
+
+#history = model.fit(x_train, y_train, epochs=1)
+
+
+x_train = [denoise(img) for img in x_train]
+
+# Split the training set into training and validation sets
+x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
+
+# Display the dimensions of the split sets
+print("Dimensions of the training set after splitting: ", len(x_train))
+print("Dimensions of the validation set: ", len(x_valid))
+
+tensorboard_callback = TensorBoard(log_dir='logs/small__' + datetime.datetime.now().strftime("%d-%m_%Hh%M"), histogram_freq=5)
+
+history = cnn_model.fit(
+        x_train, y_train,
+        validation_data=(x_train, y_train),
+        batch_size=50,
+        epochs=5,
+        callbacks=[tensorboard_callback])
+
+cnn_model.evaluate(x_valid, y_valid, verbose=2)
+plot_graphs(history)
+
+
