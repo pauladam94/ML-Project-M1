@@ -43,26 +43,8 @@ with open('our_data.csv', newline='') as csvfile:
 data_shape = [26,26,1]
 
 
-def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, lr=0.01, data_augmentation=False, from_ResNet=False, trainable_CNN=True):
-    """
-    Function to construct a Convolutional Neural Network (CNN).
+def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, lr=0.04, data_augmentation=False, from_ResNet=False, trainable_CNN=True):
 
-    Args:
-    layers: Tuple of lists specifying the number of filters for each convolutional layer and
-            the number of units for each dense layer. Default is ([32,64,64],[64]).
-    input_shape: Tuple representing the dimensions of the input data (height, width, channels).
-    output_dim: Integer indicating the number of output classes.
-    lr: Float representing the learning rate for the Adam optimizer. Default is 0.001.
-    data_augmentation: Boolean flag indicating whether data augmentation should be applied.
-                      Default is False.
-    from_ResNet: Boolean flag indicating whether to use pre-trained ResNet50 layers.
-                 Default is False.
-    trainable_CNN: Boolean flag indicating whether CNN layers should be trainable.
-                   Default is True.
-
-    Returns:
-    model: A compiled Keras model.
-    """
     model = Sequential()
 
     model.add(Input(shape=input_shape))
@@ -74,11 +56,12 @@ def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, l
     # CNN layers
     
     model.add(Conv2D(32, (3, 3), activation='relu', input_shape=data_shape))
-    model.add(MaxPooling2D(2,2))
-    model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(2,2))
-    model.add(Conv2D(128, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(2,2))
+    
+    model.add(Conv2D(32, (3, 3), activation='relu'))
+
+    model.add(Conv2D(32, (3, 3), activation='relu'))
+
+    model.add(Conv2D(32, (3, 3), activation='relu'))
 
 
 
@@ -89,9 +72,10 @@ def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, l
 
     # Add dense layers
     model.add(Dense(64, activation='relu'))
-    model.add(Dense(20, activation='relu'))
-    
+    model.add(Dense(64, activation='relu'))
+
     # Output layer
+    model.add(Dense(20, activation='relu'))
 
 
     # Compile the model
@@ -125,11 +109,11 @@ tensorboard_callback = TensorBoard(log_dir='logs/small__' + datetime.datetime.no
 history = cnn_model.fit(
         x_train, y_train,
         validation_data=(x_train, y_train),
-        batch_size=90,
+        batch_size=100,
         epochs=25,
         callbacks=[tensorboard_callback])
 
 cnn_model.evaluate(x_valid, y_valid, verbose=2)
-plot_graphs(history)
+#plot_graphs(history)
 
 
