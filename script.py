@@ -30,10 +30,15 @@ import csv
 
 
 
-with open('our_data.csv', newline='') as csvfile:
-    x_train = int(np.loadtxt(csvfile, delimiter=','))
-    print(x_train)
+with open('our_data_x.csv', newline='') as csvfile:
+    x_train = np.loadtxt(csvfile, delimiter=',')
+    #print(x_train)
     x_train = x_train.reshape(-1,26,26)
+
+
+with open('our_data_y.csv', newline='') as csvfile:
+    y_train = np.loadtxt(csvfile, delimiter=',')
+
 
 data_shape = [26,26,1]
 
@@ -50,17 +55,19 @@ def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, l
 
     # CNN layers
     
-    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=data_shape))
+    model.add(Conv2D(16, (3, 3), activation='relu', input_shape=data_shape))
     
-    model.add(Conv2D(32, (3, 3), activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Conv2D(32, (3, 3), activation='relu'))
 
-    model.add(Conv2D(32, (3, 3), activation='relu'))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
 
-    model.add(Conv2D(32, (3, 3), activation='relu'))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
 
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=None))
+    model.add(Conv2D(64, (3, 3), activation='relu'))
+
+    # model.add(MaxPooling2D(pool_size=(2, 2), strides=None))
 
 
     # Flatten the data for dense layers
@@ -68,8 +75,8 @@ def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, l
     model.add(Flatten())
 
     # Add dense layers
-    model.add(Dense(80, activation='relu'))
     model.add(Dense(40, activation='relu'))
+    model.add(Dense(20, activation='relu'))
 
     # Output layer
     model.add(Dense(20, activation='relu'))
@@ -83,13 +90,6 @@ def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, l
 
 cnn_model = build_CNN(lr=0.05)
 cnn_model.summary()
-
-
-
-
-with gzip.open('y_train.csv.gz', 'rb') as f:
-    y_train = np.loadtxt(f, delimiter=',', dtype=int)
-    #print(x_train)
 
 
 # Split the training set into training and validation sets
@@ -107,7 +107,7 @@ history = cnn_model.fit(
         x_train, y_train,
         validation_data=(x_train, y_train),
         batch_size=50,
-        epochs=30,
+        epochs=60,
         callbacks=[tensorboard_callback])
 
 cnn_model.evaluate(x_valid, y_valid, verbose=2)

@@ -21,7 +21,7 @@ with gzip.open('x_train.csv.gz', 'rb') as f:
 # Load the labels from the compressed CSV file
 with gzip.open('y_train.csv.gz', 'rb') as f:
     y_train = np.loadtxt(f, delimiter=',', dtype=int)
-    #print(x_train)
+    #print(y_train)
 
 def img2BW(img):
     x, y, c = img.shape
@@ -241,16 +241,30 @@ def denoise(img): # Taille image 32*32*3 -> 26*26*1
 #])
 
 
-with open('our_data.csv', 'w', newline='') as csvfile:
+
+
+with open('our_data_y.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, dialect='unix')
     i=0
-    for img in x_train:
-        img_ = denoise(img)
-        #print(img_)
-        writer.writerow(img_.flatten())
-        writer.writerow(shift_down(img_).flatten())
-        writer.writerow(shift_up(img_).flatten())
-        writer.writerow(shift_left(img_).flatten())
-        writer.writerow(shift_right(img_).flatten())
+    x = [ 0 for _ in range(20)]
+    for n in y_train:
+        x[n] = x[n] + 1
+        for _ in range(5):
+            writer.writerow([n])
         print(i)
         i+=5
+    print(x)
+    
+# with open('our_data_x.csv', 'w', newline='') as csvfile:
+#     writer = csv.writer(csvfile, dialect='unix')
+#     i=0
+#     for img in x_train:
+#         img_ = denoise(img)
+#         print(img_)
+#         writer.writerow(img_.flatten())
+#         writer.writerow(shift_down(img_).flatten())
+#         writer.writerow(shift_up(img_).flatten())
+#         writer.writerow(shift_left(img_).flatten())
+#         writer.writerow(shift_right(img_).flatten())
+#         print(i)
+#         i+=5
