@@ -227,19 +227,23 @@ def load_info_data_set(transformation):
     
 def denoise(img): # Taille image 32*32*3 -> 26*26*1
     img_ = np.zeros([26,26])
-    x = kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2)
-    for i in range(26):
-        for j in range(26):
-            c = x[i][j][0]
-            if c<160:
-                img_[i][j] = 0
-            else:
-                img_[i][j] = 1
-    return (img_)
+    #x = kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2)
+    return (convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3))
+    
 
     
 
+#load_info_data_set([
+#    lambda img : kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2),
+#    lambda img : convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3)
+#])
+
+
 with open('our_data.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, dialect='unix')
+    i=1
     for img in x_train:
-        writer.writerow(denoise(img).flatten())
+        print(denoise(img).flatten())
+        writer.writerow(denoise(img.flatten()), delimiter =',')
+        print(i)
+        i+=1
