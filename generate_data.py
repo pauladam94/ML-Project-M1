@@ -226,13 +226,13 @@ def load_info_data_set(transformation):
     plt.show()
 
 
-def denoise(img): # Taille image 32*32*3 -> 26*26*1
-    #x = kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2)
-    img_ = convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3)
+def denoise(img): # Taille image 32*32*3 -> 28*28*1
+    #img_ = kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2)
+    img_ = convol(convol(convol(img2BW(img),ker3),ker5),ker3)
     #print(np.squeeze(img_).shape)
     return (np.squeeze(img_))
     
-
+#load_info_data_set([denoise])
     
 
 #load_info_data_set([
@@ -253,18 +253,18 @@ with open('our_data_y.csv', 'w', newline='') as csvfile:
             writer.writerow([n])
         print(i)
         i+=5
-    print(x)
+#     print(x)
     
-# with open('our_data_x.csv', 'w', newline='') as csvfile:
-#     writer = csv.writer(csvfile, dialect='unix')
-#     i=0
-#     for img in x_train:
-#         img_ = denoise(img)
-#         print(img_)
-#         writer.writerow(img_.flatten())
-#         writer.writerow(shift_down(img_).flatten())
-#         writer.writerow(shift_up(img_).flatten())
-#         writer.writerow(shift_left(img_).flatten())
-#         writer.writerow(shift_right(img_).flatten())
-#         print(i)
-#         i+=5
+with open('our_data_x.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile, dialect='unix')
+    i=0
+    for img in x_train:
+        img_ = denoise(img)
+       # print(img_)
+        writer.writerow(img_.flatten())
+        writer.writerow(shift_down(img_).flatten())
+        writer.writerow(shift_up(img_).flatten())
+        writer.writerow(shift_left(img_).flatten())
+        writer.writerow(shift_right(img_).flatten())
+        print(i)
+        i+=5
