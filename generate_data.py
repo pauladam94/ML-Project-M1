@@ -56,7 +56,7 @@ def convol(img, ker):
 # -------- DATA AUGMENTATION FUNCTIONS --------
 
 def shift_up(img):
-    x, y, c = img.shape
+    x, y = img.shape
     img_ = np.zeros([x,y],dtype=np.int64)
     img_[x-1] = img[0]
     for i in range(x-1):
@@ -65,7 +65,7 @@ def shift_up(img):
 
 
 def shift_down(img):
-    x, y, c = img.shape
+    x, y = img.shape
     img_ = np.zeros([x,y],dtype=np.int64)
     img_[0] = img[x-1]
     for i in range(x-1):
@@ -73,7 +73,7 @@ def shift_down(img):
     return(img_)
 
 def shift_left(img):
-    x, y, c = img.shape
+    x, y = img.shape
     img_ = np.zeros([x,y],dtype=np.int64)
     img_[x-1] = img[0]
     for i in range(x):
@@ -83,7 +83,7 @@ def shift_left(img):
     return(img_)
 
 def shift_right(img):
-    x, y, c = img.shape
+    x, y = img.shape
     img_ = np.zeros([x,y],dtype=np.int64)
     img_[x-1] = img[0]
     for i in range(x):
@@ -224,11 +224,13 @@ def load_info_data_set(transformation):
         ax.label_outer()
     fig.tight_layout()
     plt.show()
-    
+
+
 def denoise(img): # Taille image 32*32*3 -> 26*26*1
-    img_ = np.zeros([26,26])
     #x = kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2)
-    return (convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3))
+    img_ = convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3)
+    #print(np.squeeze(img_).shape)
+    return (np.squeeze(img_))
     
 
     
@@ -241,9 +243,14 @@ def denoise(img): # Taille image 32*32*3 -> 26*26*1
 
 with open('our_data.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, dialect='unix')
-    i=1
+    i=0
     for img in x_train:
-        print(denoise(img).flatten())
-        writer.writerow(denoise(img.flatten()), delimiter =',')
+        img_ = denoise(img)
+        #print(img_)
+        writer.writerow(img_.flatten())
+        writer.writerow(shift_down(img_).flatten())
+        writer.writerow(shift_up(img_).flatten())
+        writer.writerow(shift_left(img_).flatten())
+        writer.writerow(shift_right(img_).flatten())
         print(i)
-        i+=1
+        i+=5
