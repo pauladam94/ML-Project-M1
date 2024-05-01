@@ -21,17 +21,22 @@ from tensorflow.keras.applications import ResNet50
 import csv
 
 with open('our_data_x.csv', newline='') as csvfile:
-    x_train = np.loadtxt(csvfile, delimiter=',')
-    x_train = x_train.reshape(-1, 28, 28)
+    x_data = np.loadtxt(csvfile, delimiter=',')
+    x_data = x_data.reshape(-1, 28, 28)
 
 with open('our_data_y.csv', newline='') as csvfile:
-    y_train = np.loadtxt(csvfile, delimiter=',')
-
-x_train = [x.flatten() for x in x_train]
-y_train = [1 if (y == 1 or y<=10) else 0 for y in y_train]
+    y_data = np.loadtxt(csvfile, delimiter=',')
 
 
-x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.2)
+def detect(n,d):
+    return str(d) in str(n)
+
+x_data = [x.flatten() for x in x_data]
+y_data = [detect(y,1) for y in y_data]
+
+
+
+x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2)
 #x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.2, random_state=42)
 
 isThereOne = svm.SVC()
@@ -39,27 +44,12 @@ isThereOne.fit(x_train, y_train)
 
 print("\n\n\n")
 
-print("Train accuracy =",isThereOne.score(x_train, y_train))
-print("Test accuracy =",isThereOne.score(x_test, y_test))
+print("Train accuracy =", isThereOne.score(x_train, y_train))
+print("Test accuracy  =", isThereOne.score(x_test, y_test))
 
 
-import matplotlib.pyplot as plt
-import numpy as np
+prediction = isThereOne.predict(x_data)
 
-# Predict the labels
-y_pred = isThereOne.predict(x_test)
-
-# Convert predictions classes to one hot vectors 
-y_pred_classes = np.argmax(y_pred, axis = 1) 
-
-# Select 10 random images and their true and predicted labels
-indices = np.random.choice(range(x_test.shape[0]), size=10, replace=False)
-
-for i, idx in enumerate(indices):
-    plt.subplot(2, 5, i+1)
-    plt.imshow(x_test[idx], cmap='gray')
-    plt.title(f"True: {y_test[idx]}, Pred: {y_pred_classes[idx]}")
-    plt.axis('off')
-
-plt.tight_layout()
-plt.show()
+for i in range(4995):
+    if prediction[i] != y_data[i]:
+        print(i)
