@@ -43,7 +43,7 @@ with open('our_data_y.csv', newline='') as csvfile:
 data_shape = [28,28,1]
 
 
-def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, lr=0.9, data_augmentation=False, from_ResNet=False, trainable_CNN=True):
+def build_CNN(layers=([32,64,64],[20]), input_shape=data_shape, output_dim=20, lr=0.9, data_augmentation=False, from_ResNet=False, trainable_CNN=True):
 
     model = Sequential()
 
@@ -55,19 +55,11 @@ def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, l
 
     # CNN layers
     
-    model.add(Conv2D(32, (5, 5), activation='relu', input_shape=data_shape))
-
-    model.add(Conv2D(32, (5, 5), activation='relu'))
-
+    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=data_shape))
     model.add(MaxPooling2D(pool_size=(2, 2)))
-
-    model.add(Conv2D(32, (3, 3), activation='relu'))
-
-    model.add(Conv2D(16, (3, 3), activation='relu'))
-
+    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=data_shape))
     model.add(MaxPooling2D(pool_size=(2, 2)))
-
-    # model.add(MaxPooling2D(pool_size=(2, 2), strides=None))
+    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=data_shape))
 
 
     # Flatten the data for dense layers
@@ -76,9 +68,6 @@ def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, l
 
     # Add dense layers
     model.add(Dense(40, activation='relu'))
-    model.add(Dense(32, activation='relu'))
-
-    # Output layer
     model.add(Dense(20, activation='relu'))
 
 
