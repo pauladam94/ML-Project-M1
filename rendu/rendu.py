@@ -59,8 +59,6 @@ ker5 = np.array([
 ])
 ker5 = ker5 / np.sum(ker5)
 
-
-
 def convol(img, ker):
     x, y, c = img.shape
     xk, yk = ker.shape
@@ -73,7 +71,6 @@ def convol(img, ker):
                     val += img[i+ii-xk//2][j+jj-yk//2][0]*ker[ii][jj]
             img_[i][j][0] = val
     return(img_)
-
 
 def img2BW(img):
     x, y, c = img.shape
@@ -99,8 +96,8 @@ with gzip.open(image_file, 'rb') as f:
     data = data.reshape(-1, 32, 32, 3)
 #x_train = x_train.reshape(-1, 32, 32, 3)
 
-with gzip.open("y_train.csv.gz", 'rb') as f:
-    y_data = np.loadtxt(f, delimiter=',').astype(np.int64)
+# with gzip.open("y_train.csv.gz", 'rb') as f:
+#     y_data = np.loadtxt(f, delimiter=',').astype(np.int64)
 
 
 # from sklearn.model_selection import train_test_split
@@ -130,7 +127,7 @@ def final_model(img):
     return randint(0, 9)
 
 
-data = data[:10]
+#data = data[:10]
 
 
 data = [np.squeeze(kmeans2(convol(convol(convol(img2BW(image),ker3),ker5),ker3))) for image in data]
@@ -138,9 +135,9 @@ data = [np.squeeze(kmeans2(convol(convol(convol(img2BW(image),ker3),ker5),ker3))
 #data = [image.flatten() for image in data]
 
 
-print([final_model(img) for img in data])
-print("\n\n\n\n\n")
-print(y_data[:10])
+# print([final_model(img) for img in data])
+# print("\n\n\n\n\n")
+# print(y_data[:10])
 
 with open('the_result.csv', 'w') as f:
     i = 0
