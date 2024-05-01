@@ -1,21 +1,14 @@
 import numpy as np
 import gzip
-
 from PIL import Image
-
 import matplotlib.pyplot as plt
 import numpy as np
-
 import random as rd
 from scipy import ndimage
-
 from sklearn.cluster import KMeans
-
 import datetime
-
 from tensorflow.keras.datasets import fashion_mnist, cifar10
 from sklearn.model_selection import train_test_split
-
 from tensorflow.keras import Input
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.layers import Dense, Activation, Conv2D, MaxPooling2D, Flatten, Dropout, GlobalAveragePooling2D
@@ -23,99 +16,72 @@ from tensorflow.keras.layers import RandomCrop, RandomFlip, RandomRotation, Rand
 from tensorflow.keras.losses import SparseCategoricalCrossentropy, CategoricalCrossentropy
 from tensorflow.keras.optimizers import Adam, RMSprop, SGD
 from tensorflow.keras.callbacks import EarlyStopping, TensorBoard
-
 from tensorflow.keras.applications import ResNet50
-
 import csv
-
-
 
 with open('our_data_x.csv', newline='') as csvfile:
     x_train = np.loadtxt(csvfile, delimiter=',')
-    #print(x_train)
-    x_train = x_train.reshape(-1,28,28)
-
+    x_train = x_train.reshape(-1, 28, 28)
 
 with open('our_data_y.csv', newline='') as csvfile:
     y_train = np.loadtxt(csvfile, delimiter=',')
 
+# We build a CNN model
+# We train on hand writing digits from 0 to 19
 
-data_shape = [28,28,1]
+data_shape = [28, 28, 1]
 
+# We split the data into training and testing sets
+x_train, x_test, y_train, y_test = train_test_split(
+    x_train, y_train, test_size=0.2, random_state=42)
 
-def build_CNN(layers=([32,64,64],[20]), input_shape=data_shape, output_dim=20, lr=0.9, data_augmentation=False, from_ResNet=False, trainable_CNN=True):
+# We normalize the data
+x_train = x_train / 255.0
+x_test = x_test / 255.0
 
-    model = Sequential()
+# We add a channel dimension
 
-    model.add(Input(shape=input_shape))
+x_train = np.expand_dims(x_train, axis=-1)
 
-    # data augmentation
-    if data_augmentation:
-      pass
+x_test = np.expand_dims(x_test, axis=-1)
 
-    # CNN layers
-    
-    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=data_shape))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=data_shape))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=data_shape))
+# We build the model
 
+model = Sequential()
 
-    # Flatten the data for dense layers
+model.add(Input(shape=data_shape))
 
-    model.add(Flatten())
+model.add(Conv2D(32, (3, 3), activation='relu'))
 
-    # Add dense layers
-    model.add(Dense(40, activation='relu'))
-    model.add(Dense(20, activation='relu'))
+model.add(MaxPooling2D((2, 2)))
 
+model.add(Conv2D(64, (3, 3), activation='relu'))
 
-    # Compile the model
-    model.compile(optimizer=Adam(learning_rate=lr), loss=SparseCategoricalCrossentropy(from_logits=True), metrics=['accuracy'])
+model.add(MaxPooling2D((2, 2)))
 
-    return model
+model.add(Conv2D(64, (3, 3), activation='relu'))
 
+model.add(Flatten())
 
-cnn_model = build_CNN(lr=0.9)
-cnn_model.summary()
+model.add(Dense(64, activation='relu'))
 
+model.add(Dense(20, activation='softmax'))
 
-# Split the training set into training and validation sets
-x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.05, random_state=42)
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
+model.summary()
 
+# We train the model
 
-# Display the dimensions of the split sets
-print("Dimensions of the training set after splitting: ", len(x_train))
-print("Dimensions of the validation set: ", len(x_valid))
+model.fit(x_train, y_train, epochs=50, batch_size=64,
+          validation_data=(x_test, y_test))
 
-tensorboard_callback = TensorBoard(log_dir='logs/small__' + datetime.datetime.now().strftime("%d-%m_%Hh%M"), histogram_freq=5)
+# We evaluate the model
 
-history = cnn_model.fit(
-        x_train, y_train,
-        validation_data=(x_train, y_train),
-        batch_size=100,
-        epochs=30,
-        callbacks=[tensorboard_callback])
+test_loss, test_acc = model.evaluate(x_test, y_test, verbose=2)
 
-cnn_model.evaluate(x_valid, y_valid, verbose=2)
+print('\nTest accuracy:', test_acc)
 
-print(history.history.keys())
-# summarize history for accuracy
-plt.plot(history.history['accuracy'])
-plt.plot(history.history['val_accuracy'])
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
-# summarize history for loss
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
-
+# We save the model
+model.save('cnn_model.h5')
