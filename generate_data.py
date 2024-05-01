@@ -31,14 +31,6 @@ def img2BW(img):
             img_[i][j][0] = 0.333*img[i][j][0]  + 0.333*img[i][j][1] + 0.333*img[i][j][2]
     return(img_)
 
-# def luminance(img):
-#     x, y, c = img.shape
-#     img_ = np.zeros([x,y,1],dtype=np.int64)
-#     for i in range(x):
-#         for j in range(y):
-#             img_[i][j][0] = 0.2126*img[i][j][0]  + 0.7152*img[i][j][1] + 0.0722*img[i][j][2]
-#     return(img_)
-
 def convol(img, ker):
     x, y, c = img.shape
     xk, yk = ker.shape
@@ -123,39 +115,6 @@ def kmeans(image, n_clusters):
         segmented_image[x, y] = labels_center[labels[i]]
     return segmented_image
 
-
-# def threshold(img):
-#     x, y, c = img.shape
-#     img_ = np.zeros([x,y,1],dtype=np.int64)
-#     min=100000
-#     max=-100000
-#     for i in range(x):
-#         for j in range(y):
-#             if img[i][j][0]>max:
-#                 max = img[i][j][0]
-#             if img[i][j][0]<min:
-#                 min = img[i][j][0]
-#     f = max-min
-    
-#     for i in range(x):
-#         for j in range(y):
-#             val = (img[i][j][0]-min)/f
-#             img_[i][j][0] = val*100
-#     #std =  ndimage.standard_deviation(img_)
-#     for i in range(x):
-#         for j in range(y):
-#             val = np.sqrt(val)
-#             #pass
-#     for i in range(x):
-#         for j in range(y):
-#             img_[i][j][0] = (img_[i][j][0])//10
-#     return(img_)
-
-# sobel = np.array([
-#     [-1,0,1],
-#     [-2,0,2],
-#     [-1,0,1]
-# ])
 
 ker3 = np.array([
     [0,3,0],
@@ -242,29 +201,23 @@ def denoise(img): # Taille image 32*32*3 -> 28*28*1
 
 
 
-
-with open('our_data_y.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, dialect='unix')
-    i=0
-    x = [ 0 for _ in range(20)]
+with open('our_data_y.csv', 'w') as f:
+    i = 0
     for n in y_train:
-        x[n] = x[n] + 1
         for _ in range(5):
-            writer.writerow([n])
+            f.write(str(n) + '\n')
         print(i)
-        i+=5
-#     print(x)
+        i += 5
+
     
-with open('our_data_x.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, dialect='unix')
-    i=0
+with open('our_data_x.csv', 'w') as f:
+    i = 0
     for img in x_train:
         img_ = denoise(img)
-       # print(img_)
-        writer.writerow(img_.flatten())
-        writer.writerow(shift_down(img_).flatten())
-        writer.writerow(shift_up(img_).flatten())
-        writer.writerow(shift_left(img_).flatten())
-        writer.writerow(shift_right(img_).flatten())
+        f.write(','.join(map(str, img_.flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_down(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_up(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_left(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_right(img_).flatten().tolist())) + '\n')
         print(i)
-        i+=5
+        i += 5
