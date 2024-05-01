@@ -33,7 +33,6 @@ def load_info_data_set():
         for c in range(columns): 
             img_nb = rd.randint(0, 5001-1)
             #img_nb = 812
-            
             img = x_train[img_nb]
             ax[0][c].imshow(img)
             ax[0][c].set_title(y_train[img_nb])

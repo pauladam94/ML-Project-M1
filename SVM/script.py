@@ -42,10 +42,27 @@ x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.
 isThereOne = svm.SVC()
 isThereOne.fit(x_train, y_train)
 
+
+
+
+
+# We save the model
+import pickle
+with open('isThereOne.pkl','wb') as f:
+    pickle.dump(isThereOne,f)
+
+
+# We open the model
+with open('isThereOne.pkl', 'rb') as f:
+    isThereOne = pickle.load(f)
+
+
+
 print("\n\n\n")
 
 print("Train accuracy =", isThereOne.score(x_train, y_train))
 print("Test accuracy  =", isThereOne.score(x_test, y_test))
+
 
 
 prediction = isThereOne.predict(x_data)

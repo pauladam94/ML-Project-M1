@@ -201,18 +201,14 @@ def denoise(img): # Taille image 32*32*3 -> 28*28*1
 
 
 
-
-with open('our_data_y.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, dialect='unix')
-    i=0
-    x = [ 0 for _ in range(20)]
+with open('our_data_y.csv', 'w') as f:
+    i = 0
     for n in y_train:
-        x[n] = x[n] + 1
         for _ in range(5):
-            writer.writerow([n])
+            f.write(str(n) + '\n')
         print(i)
-        i+=5
-#     print(x)
+        i += 5
+
     
 with open('our_data_x.csv', 'w') as f:
     i = 0
