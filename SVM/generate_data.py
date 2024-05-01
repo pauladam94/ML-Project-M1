@@ -14,14 +14,6 @@ from sklearn.cluster import KMeans
 import csv
 
 
-# Load the images from the compressed CSV file
-with gzip.open('x_train.csv.gz', 'rb') as f:
-    x_train = np.loadtxt(f, delimiter=',').astype(np.int64)
-    x_train = x_train.reshape(-1, 32, 32, 3)
-# Load the labels from the compressed CSV file
-with gzip.open('y_train.csv.gz', 'rb') as f:
-    y_train = np.loadtxt(f, delimiter=',', dtype=int)
-    #print(y_train)
 
 def img2BW(img):
     x, y, c = img.shape
@@ -230,34 +222,38 @@ def denoise(img): # Taille image 32*32*3 -> 28*28*1
     #print(np.squeeze(img_).shape)
     return (np.squeeze(img_))
     
-#load_info_data_set([denoise])
+
+
+
+
+
+
+
+with gzip.open('x_train.csv.gz', 'rb') as f:
+    x_train = np.loadtxt(f, delimiter=',').astype(np.int64)
+    x_train = x_train.reshape(-1, 32, 32, 3)
     
-
-#load_info_data_set([
-#    lambda img : kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2),
-#    lambda img : convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3)
-#])
+with gzip.open('y_train.csv.gz', 'rb') as f:
+    y_train = np.loadtxt(f, delimiter=',', dtype=int)
+    #print(y_train)
 
 
+with open('our_data_x.csv', 'w') as f:
+    i = 0
+    for img in x_train:
+        img_ = denoise(img)
+        f.write(','.join(map(str, map(int, img_.flatten().tolist()))) + '\n')
+        f.write(','.join(map(str, shift_down(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_up(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_left(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_right(img_).flatten().tolist())) + '\n')
+        print(i)
+        i += 5
 
 with open('our_data_y.csv', 'w') as f:
     i = 0
     for n in y_train:
         for _ in range(5):
             f.write(str(n) + '\n')
-        print(i)
-        i += 5
-
-    
-
-with open('our_data_x.csv', 'w') as f:
-    i = 0
-    for img in x_train:
-        img_ = denoise(img)
-        f.write(','.join(map(str, img_.flatten().tolist())) + '\n')
-        f.write(','.join(map(str, shift_down(img_).flatten().tolist())) + '\n')
-        f.write(','.join(map(str, shift_up(img_).flatten().tolist())) + '\n')
-        f.write(','.join(map(str, shift_left(img_).flatten().tolist())) + '\n')
-        f.write(','.join(map(str, shift_right(img_).flatten().tolist())) + '\n')
         print(i)
         i += 5

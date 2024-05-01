@@ -28,10 +28,11 @@ with open('our_data_y.csv', newline='') as csvfile:
     y_data = np.loadtxt(csvfile, delimiter=',')
 
 
-def detect(n,d):
+def detect(d, n):
     return str(d) in str(n)
 
 x_data = [x.flatten() for x in x_data]
+
 y_data = [detect(y,1) for y in y_data]
 
 
@@ -70,3 +71,45 @@ prediction = isThereOne.predict(x_data)
 for i in range(4995):
     if prediction[i] != y_data[i]:
         print(i)
+
+# x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2)
+# x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.1, random_state=42)
+
+# isThere = [svm.SVC() for _ in range(1)]
+
+# for i in range(1):
+#     print(y_train)
+#     print(i)
+#     isThere[i].fit(x_train, [detect(i,y) for y in y_train])
+
+
+
+
+
+# # We save the model (test)
+# import pickle
+# with open('isThere.pkl','wb') as f:
+#     pickle.dump(isThere[0],f)
+
+
+# # We open the model
+# with open('isThere.pkl', 'rb') as f:
+#     isThere[0] = pickle.load(f)
+
+
+
+# print("\n\n\n")
+
+# for i in range(1):
+#     print(i)
+#     print("Train accuracy =", isThere[i].score(x_train, y_train))
+#     print("Test accuracy  =", isThere[i].score(x_test, y_test))
+#     print("\n")
+
+
+
+# prediction = isThere[i].predict(x_data)
+
+# for i in range(4995):
+#     if prediction[i] != y_data[i]:
+#         print(i)
