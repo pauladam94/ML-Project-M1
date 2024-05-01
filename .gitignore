@@ -1,0 +1,9 @@
+*.csv.gz
+
+*.csv
+
+*.pdf
+
+logs/
+
+__pycache__/

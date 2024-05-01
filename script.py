@@ -30,20 +30,20 @@ import csv
 
 
 
-with open('our_data.csv', newline='') as csvfile:
-    x_train = np.loadtxt(csvfile, delimiter=',').astype(np.int8)
-    x_train = x_train.reshape(-1,26,26)
-
-# print(x_train[0])
-
-# pltfig = plt.figure()
-# plt.imshow(x_train[0])
-# plt.show()
-
-data_shape = [26,26,1]
+with open('our_data_x.csv', newline='') as csvfile:
+    x_train = np.loadtxt(csvfile, delimiter=',')
+    #print(x_train)
+    x_train = x_train.reshape(-1,28,28)
 
 
-def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, lr=0.04, data_augmentation=False, from_ResNet=False, trainable_CNN=True):
+with open('our_data_y.csv', newline='') as csvfile:
+    y_train = np.loadtxt(csvfile, delimiter=',')
+
+
+data_shape = [28,28,1]
+
+
+def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, lr=0.9, data_augmentation=False, from_ResNet=False, trainable_CNN=True):
 
     model = Sequential()
 
@@ -55,15 +55,19 @@ def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, l
 
     # CNN layers
     
-    model.add(Conv2D(32, (3, 3), activation='relu', input_shape=data_shape))
-    
-    model.add(Conv2D(32, (3, 3), activation='relu'))
+    model.add(Conv2D(32, (5, 5), activation='relu', input_shape=data_shape))
+
+    model.add(Conv2D(32, (5, 5), activation='relu'))
+
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
     model.add(Conv2D(32, (3, 3), activation='relu'))
 
-    model.add(Conv2D(32, (3, 3), activation='relu'))
+    model.add(Conv2D(16, (3, 3), activation='relu'))
 
+    model.add(MaxPooling2D(pool_size=(2, 2)))
 
+    # model.add(MaxPooling2D(pool_size=(2, 2), strides=None))
 
 
     # Flatten the data for dense layers
@@ -71,8 +75,8 @@ def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, l
     model.add(Flatten())
 
     # Add dense layers
-    model.add(Dense(64, activation='relu'))
-    model.add(Dense(64, activation='relu'))
+    model.add(Dense(40, activation='relu'))
+    model.add(Dense(32, activation='relu'))
 
     # Output layer
     model.add(Dense(20, activation='relu'))
@@ -84,19 +88,12 @@ def build_CNN(layers=([32,64,64],[64]), input_shape=data_shape, output_dim=20, l
     return model
 
 
-cnn_model = build_CNN(lr=0.01)
+cnn_model = build_CNN(lr=0.9)
 cnn_model.summary()
 
 
-
-
-with gzip.open('y_train.csv.gz', 'rb') as f:
-    y_train = np.loadtxt(f, delimiter=',', dtype=int)
-    #print(x_train)
-
-
 # Split the training set into training and validation sets
-x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.1, random_state=42)
+x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.05, random_state=42)
 
 
 
@@ -110,10 +107,26 @@ history = cnn_model.fit(
         x_train, y_train,
         validation_data=(x_train, y_train),
         batch_size=100,
-        epochs=25,
+        epochs=30,
         callbacks=[tensorboard_callback])
 
 cnn_model.evaluate(x_valid, y_valid, verbose=2)
-#plot_graphs(history)
 
+print(history.history.keys())
+# summarize history for accuracy
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.show()
+# summarize history for loss
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'test'], loc='upper left')
+plt.show()
 

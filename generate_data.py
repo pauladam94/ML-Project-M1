@@ -21,7 +21,7 @@ with gzip.open('x_train.csv.gz', 'rb') as f:
 # Load the labels from the compressed CSV file
 with gzip.open('y_train.csv.gz', 'rb') as f:
     y_train = np.loadtxt(f, delimiter=',', dtype=int)
-    #print(x_train)
+    #print(y_train)
 
 def img2BW(img):
     x, y, c = img.shape
@@ -56,7 +56,7 @@ def convol(img, ker):
 # -------- DATA AUGMENTATION FUNCTIONS --------
 
 def shift_up(img):
-    x, y, c = img.shape
+    x, y = img.shape
     img_ = np.zeros([x,y],dtype=np.int64)
     img_[x-1] = img[0]
     for i in range(x-1):
@@ -65,7 +65,7 @@ def shift_up(img):
 
 
 def shift_down(img):
-    x, y, c = img.shape
+    x, y = img.shape
     img_ = np.zeros([x,y],dtype=np.int64)
     img_[0] = img[x-1]
     for i in range(x-1):
@@ -73,7 +73,7 @@ def shift_down(img):
     return(img_)
 
 def shift_left(img):
-    x, y, c = img.shape
+    x, y = img.shape
     img_ = np.zeros([x,y],dtype=np.int64)
     img_[x-1] = img[0]
     for i in range(x):
@@ -83,7 +83,7 @@ def shift_left(img):
     return(img_)
 
 def shift_right(img):
-    x, y, c = img.shape
+    x, y = img.shape
     img_ = np.zeros([x,y],dtype=np.int64)
     img_[x-1] = img[0]
     for i in range(x):
@@ -224,22 +224,47 @@ def load_info_data_set(transformation):
         ax.label_outer()
     fig.tight_layout()
     plt.show()
-    
-def denoise(img): # Taille image 32*32*3 -> 26*26*1
-    img_ = np.zeros([26,26])
-    x = kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2)
-    for i in range(26):
-        for j in range(26):
-            c = x[i][j][0]
-            if c<160:
-                img_[i][j] = 0
-            else:
-                img_[i][j] = 1
-    return (img_)
 
+
+def denoise(img): # Taille image 32*32*3 -> 28*28*1
+    #img_ = kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2)
+    img_ = convol(convol(convol(img2BW(img),ker3),ker5),ker3)
+    #print(np.squeeze(img_).shape)
+    return (np.squeeze(img_))
+    
+#load_info_data_set([denoise])
     
 
-with open('our_data.csv', 'w', newline='') as csvfile:
+#load_info_data_set([
+#    lambda img : kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2),
+#    lambda img : convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3)
+#])
+
+
+
+
+with open('our_data_y.csv', 'w', newline='') as csvfile:
     writer = csv.writer(csvfile, dialect='unix')
+    i=0
+    x = [ 0 for _ in range(20)]
+    for n in y_train:
+        x[n] = x[n] + 1
+        for _ in range(5):
+            writer.writerow([n])
+        print(i)
+        i+=5
+#     print(x)
+    
+with open('our_data_x.csv', 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile, dialect='unix')
+    i=0
     for img in x_train:
-        writer.writerow(denoise(img).flatten())
+        img_ = denoise(img)
+       # print(img_)
+        writer.writerow(img_.flatten())
+        writer.writerow(shift_down(img_).flatten())
+        writer.writerow(shift_up(img_).flatten())
+        writer.writerow(shift_left(img_).flatten())
+        writer.writerow(shift_right(img_).flatten())
+        print(i)
+        i+=5
