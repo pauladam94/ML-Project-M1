@@ -109,6 +109,28 @@ with gzip.open(image_file, 'rb') as f:
 #x_train = x_train.reshape(-1, 32, 32, 3)
 
 
+def final_model(img):
+    img = img.flatten()
+    predictions = [0]*10
+    for i in range(10):
+        with open('svm_'+str(i)+'.pkl', 'rb') as f:
+            svm_model = pickle.load(f)
+        predictions[i] = svm_model.predict([img])[0]
+    with open('svm_two_numbers.pkl', 'rb') as f:
+        svm_model = pickle.load(f)
+    predictions.append(svm_model.predict([img])[0])
+    if predictions[10] == 0:
+        for i in range(10):
+            if predictions[i] == 1:
+                return (predictions, i)
+    else:
+        if predictions[0] == 1:
+            return (predictions, 10)
+        for i in reversed(range(10)):
+            if predictions[i] == 1:
+                return (predictions, 10 + i)
+    return (predictions, randint(0, 9))
+
 
 data = [np.squeeze(kmeans2(convol(convol(convol(img2BW(image),ker3),ker5),ker3))) for image in data]
 
@@ -118,5 +140,9 @@ data = [image.flatten() for image in data]
 with open('isThereOne.pkl', 'rb') as f:
     svm_model = pickle.load(f)
 
+print(final_model(data))
 
-print(svm_model.predict(data))
+with open('the_result.csv', 'w') as f:
+    i = 0
+    for img in data:
+        f.write(str(final_model(img)) + '\n')
