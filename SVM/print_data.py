@@ -22,7 +22,7 @@ with open('our_data_y.csv', newline='') as csvfile:
     #print(x_train)
 
 def load_info_data_set():
-    columns = 3
+    columns = 5
     rows = 1
     fig, ax = plt.subplots(rows, columns, squeeze=False)
     #fig = plt.figure()
@@ -32,7 +32,7 @@ def load_info_data_set():
     for r in range(rows):
         for c in range(columns): 
             img_nb = rd.randint(0, 5001-1)
-            img_nb = c
+            
             img = x_train[img_nb]
             ax[0][c].imshow(img)
             ax[0][c].set_title(y_train[img_nb])

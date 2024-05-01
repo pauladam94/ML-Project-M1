@@ -48,33 +48,23 @@ x_test = np.expand_dims(x_test, axis=-1)
 # We build the model
 
 model = Sequential()
-
 model.add(Input(shape=data_shape))
-
 model.add(Conv2D(32, (3, 3), activation='relu'))
-
 model.add(MaxPooling2D((2, 2)))
-
 model.add(Conv2D(64, (3, 3), activation='relu'))
-
 model.add(MaxPooling2D((2, 2)))
-
 model.add(Conv2D(64, (3, 3), activation='relu'))
 
 model.add(Flatten())
-
 model.add(Dense(64, activation='relu'))
-
 model.add(Dense(20, activation='softmax'))
-
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
 
 model.summary()
 
 # We train the model
 
-model.fit(x_train, y_train, epochs=50, batch_size=64,
+model.fit(x_train, y_train, epochs=30, batch_size=64,
           validation_data=(x_test, y_test))
 
 # We evaluate the model
@@ -84,4 +74,4 @@ test_loss, test_acc = model.evaluate(x_test, y_test, verbose=2)
 print('\nTest accuracy:', test_acc)
 
 # We save the model
-model.save('cnn_model.h5')
+#model.save('cnn_model.h5')
