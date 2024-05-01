@@ -50,15 +50,6 @@ ker3 = np.array([
 ])
 ker3 = ker3 / np.sum(ker3)
 
-# ker5 = np.array([
-#     [0,0, 1, 2, 1],
-#     [0,0, 10,5, 0],
-#     [1,7,20,7,1],
-#     [0,5 ,10,0, 0],
-#     [1,2, 1, 0, 0]
-# ])
-# ker5 = ker5 / np.sum(ker5)
-
 ker5 = np.array([
     [0,0, 0, 1, 1],
     [0,0, 2,2, 0],
@@ -110,7 +101,7 @@ with gzip.open(image_file, 'rb') as f:
 
 
 def final_model(img):
-    img = img.flatten()
+    #img = img.flatten()
     predictions = [0]*10
     for i in range(10):
         with open('svm_'+str(i)+'.pkl', 'rb') as f:
