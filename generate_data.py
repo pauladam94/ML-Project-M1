@@ -1,18 +1,12 @@
 import numpy as np
 import gzip
-
 from PIL import Image
-
 import matplotlib.pyplot as plt
 import numpy as np
-
 import random as rd
 from scipy import ndimage
-
 from sklearn.cluster import KMeans
-
 import csv
-
 
 # Load the images from the compressed CSV file
 with gzip.open('x_train.csv.gz', 'rb') as f:
@@ -31,14 +25,6 @@ def img2BW(img):
             img_[i][j][0] = 0.333*img[i][j][0]  + 0.333*img[i][j][1] + 0.333*img[i][j][2]
     return(img_)
 
-# def luminance(img):
-#     x, y, c = img.shape
-#     img_ = np.zeros([x,y,1],dtype=np.int64)
-#     for i in range(x):
-#         for j in range(y):
-#             img_[i][j][0] = 0.2126*img[i][j][0]  + 0.7152*img[i][j][1] + 0.0722*img[i][j][2]
-#     return(img_)
-
 def convol(img, ker):
     x, y, c = img.shape
     xk, yk = ker.shape
@@ -52,8 +38,12 @@ def convol(img, ker):
             img_[i][j][0] = val
     return(img_)
 
+from random import randint
 
 # -------- DATA AUGMENTATION FUNCTIONS --------
+
+def rotate(img):
+    return(ndimage.rotate(img, randint(-40, 40), reshape=False))
 
 def shift_up(img):
     x, y = img.shape
@@ -62,7 +52,6 @@ def shift_up(img):
     for i in range(x-1):
         img_[i] = img[i+1]
     return(img_)
-
 
 def shift_down(img):
     x, y = img.shape
@@ -91,7 +80,6 @@ def shift_right(img):
         for j in range(y-1):
             img_[i][j+1] = img[i][j]
     return(img_)
-
 
 def kmeans(image, n_clusters):
     # Reshape the image to be a list of pixels
@@ -123,39 +111,41 @@ def kmeans(image, n_clusters):
         segmented_image[x, y] = labels_center[labels[i]]
     return segmented_image
 
+def kmeans2(image):
+    n_clusters = 2
+    # Reshape the image to be a list of pixels
+    image_3d = np.zeros((image.shape[0] * image.shape[1], 3))
 
-# def threshold(img):
-#     x, y, c = img.shape
-#     img_ = np.zeros([x,y,1],dtype=np.int64)
-#     min=100000
-#     max=-100000
-#     for i in range(x):
-#         for j in range(y):
-#             if img[i][j][0]>max:
-#                 max = img[i][j][0]
-#             if img[i][j][0]<min:
-#                 min = img[i][j][0]
-#     f = max-min
-    
-#     for i in range(x):
-#         for j in range(y):
-#             val = (img[i][j][0]-min)/f
-#             img_[i][j][0] = val*100
-#     #std =  ndimage.standard_deviation(img_)
-#     for i in range(x):
-#         for j in range(y):
-#             val = np.sqrt(val)
-#             #pass
-#     for i in range(x):
-#         for j in range(y):
-#             img_[i][j][0] = (img_[i][j][0])//10
-#     return(img_)
+    # first column: x pixel value
+    # second column: y pixel value
+    # third column: luminance pixel value
+    for i in range(image.shape[0] * image.shape[1]):
+        image_3d[i, 0] = i % image.shape[0]
+        image_3d[i, 1] = i // image.shape[0]
+        image_3d[i, 2] = image[i % image.shape[0], i // image.shape[0]][0]
 
-# sobel = np.array([
-#     [-1,0,1],
-#     [-2,0,2],
-#     [-1,0,1]
-# ])
+    # Perform k-means clustering
+    k_means = KMeans(n_clusters=2)
+    k_means.fit(image_3d)
+
+    # Get the label of each cluster
+    labels = k_means.labels_
+    centers = k_means.cluster_centers_
+    labels_center = np.zeros(n_clusters)
+    for i in range(n_clusters):
+        labels_center[i] = image_3d[labels == i][:, 2].mean()
+    max_mean = -100000
+    min_mean =  100000
+    for i in range(n_clusters):
+        max_mean, min_mean = max(max_mean, labels_center[i]), min(min_mean, labels_center[i])
+    mean_mean = (max_mean + min_mean)/2
+
+    segmented_image = np.zeros(image.shape)
+    for i in range(image.shape[0] * image.shape[1]):
+        x = i % image.shape[0]
+        y = i // image.shape[0]
+        segmented_image[x, y] = 0 if labels_center[labels[i]]<mean_mean else 1
+    return segmented_image
 
 ker3 = np.array([
     [0,3,0],
@@ -163,15 +153,6 @@ ker3 = np.array([
     [0,3,0]
 ])
 ker3 = ker3 / np.sum(ker3)
-
-# ker5 = np.array([
-#     [0,0, 1, 2, 1],
-#     [0,0, 10,5, 0],
-#     [1,7,20,7,1],
-#     [0,5 ,10,0, 0],
-#     [1,2, 1, 0, 0]
-# ])
-# ker5 = ker5 / np.sum(ker5)
 
 ker5 = np.array([
     [0,0, 0, 1, 1],
@@ -181,8 +162,6 @@ ker5 = np.array([
     [1,1, 0, 0, 0]
 ])
 ker5 = ker5 / np.sum(ker5)
-
-
 
 def load_info_data_set(transformation):
     # Load the images from the compressed CSV file
@@ -195,11 +174,6 @@ def load_info_data_set(transformation):
     x_shape = x_train.shape
     y_shape = y_train.shape
     shape_image = x_train[0].shape
-
-    #print("Size X Train", x_shape)
-    #print("Size Picture :", x_train[0].shape)
-    #print("Size Y Train", y_shape)
-    #print("Y Train", y_train[0])
 
     columns = 20
     rows = len(transformation)
@@ -216,7 +190,6 @@ def load_info_data_set(transformation):
         j = 0
         for transf in transformation:
             j += 1
-            #print("Transformation ", j)
             axs[j][i].imshow(transf(img), cmap='gray')
 
     for ax in fig.get_axes():
@@ -225,46 +198,139 @@ def load_info_data_set(transformation):
     fig.tight_layout()
     plt.show()
 
-
-def denoise(img): # Taille image 32*32*3 -> 28*28*1
-    #img_ = kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2)
+def denoise(img):
     img_ = convol(convol(convol(img2BW(img),ker3),ker5),ker3)
-    #print(np.squeeze(img_).shape)
     return (np.squeeze(img_))
-    
-#load_info_data_set([denoise])
-    
-
-#load_info_data_set([
-#    lambda img : kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2),
-#    lambda img : convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3)
-#])
-
-
-
-
-with open('our_data_y.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, dialect='unix')
-    i=0
-    x = [ 0 for _ in range(20)]
+"""
+with open('our_data_y.csv', 'w') as f:
+    print("LOAD our_data_y.csv")
     for n in y_train:
-        x[n] = x[n] + 1
         for _ in range(5):
-            writer.writerow([n])
-        print(i)
-        i+=5
-#     print(x)
-    
-with open('our_data_x.csv', 'w', newline='') as csvfile:
-    writer = csv.writer(csvfile, dialect='unix')
-    i=0
+            f.write(str(n) + '\n')
+
+with open('our_data_x.csv', 'w') as f:
+    print("LOAD our_data_x.csv")
+    i = 0
     for img in x_train:
         img_ = denoise(img)
-       # print(img_)
-        writer.writerow(img_.flatten())
-        writer.writerow(shift_down(img_).flatten())
-        writer.writerow(shift_up(img_).flatten())
-        writer.writerow(shift_left(img_).flatten())
-        writer.writerow(shift_right(img_).flatten())
-        print(i)
-        i+=5
+        f.write(','.join(map(str, img_.flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_down(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_up(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_left(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_right(img_).flatten().tolist())) + '\n')
+        if i % 1000 == 0:
+            print(i)
+        i += 5
+"""
+
+def denoise_kmeans(img):
+    img_ = kmeans2(convol(convol(convol(img2BW(img),ker3),ker5),ker3))
+    return (np.squeeze(img_))
+"""
+with open('our_data_y_kmeans.csv', 'w') as f:
+    print("LOAD our_data_y.csv")
+    for n in y_train:
+        for _ in range(10):
+            f.write(str(n) + '\n')
+
+with open('our_data_x_kmeans.csv', 'w') as f:
+    print("LOAD our_data_x_kmeans.csv")
+    i = 0
+    for img in x_train:
+        img_ = denoise_kmeans(img)
+        f.write(','.join(map(str, img_.flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_down(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_up(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_left(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_right(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, rotate(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, rotate(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, rotate(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, rotate(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, rotate(img_).flatten().tolist())) + '\n')
+        if i % 1000 == 0:
+            print(i)
+        i += 5
+"""
+"""
+with open('our_data_y_kmeans.csv', 'w') as f:
+    print("LOAD our_data_y.csv")
+    for n in y_train:
+        for _ in range(5):
+            f.write(str(n) + '\n')
+
+with open('our_data_x_kmeans.csv', 'w') as f:
+    print("LOAD our_data_x_kmeans.csv")
+    i = 0
+    for img in x_train:
+        img_ = denoise_kmeans(img)
+        f.write(','.join(map(str, img_.flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_down(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_up(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_left(img_).flatten().tolist())) + '\n')
+        f.write(','.join(map(str, shift_right(img_).flatten().tolist())) + '\n')
+        if i % 1000 == 0:
+            print(i)
+        i += 5
+"""
+def detect(i, number):
+    if str(i) in str(number):
+        return 1
+    else:
+        return 0
+
+"""
+for i in range(10) :
+    print("LOAD Is there a " + str(i) + ".csv")
+    with open('our_data_y_special_' + str(i) + '.csv', 'w') as f :
+        line = 0
+        for number in y_train:
+            for _ in range(5):
+                f.write(str(detect(i, number)) + '\n')
+            line += 5
+
+def isThereTwoNumbers(number) :
+    if number >= 10:
+        return 1
+    else:
+        return 0
+
+        
+
+with open('our_data_y_special_two_numbers' + str(i) + '.csv', 'w') as f :
+    line = 0
+    for number in y_train:
+        for _ in range(5):
+            f.write(str(isThereTwoNumbers(i, number)) + '\n')
+        line += 5
+"""
+
+
+"""
+with open('our_data_x_kmeans_no_data_augmentation.csv', 'w') as f:
+    print("LOAD our_data_x_kmeans_no_data_augmentation.csv")
+    i = 0
+    for img in x_train:
+        img_ = denoise_kmeans(img)
+        f.write(','.join(map(str, img_.flatten().tolist())) + '\n')
+        if i % 100 == 0:
+            print(i)
+        i += 1
+
+with open('our_data_y_no_data_augmentation.csv', 'w') as f:
+    print("LOAD our_data_y.csv")
+    for n in y_train:
+        f.write(str(n) + '\n')
+"""
+
+
+
+with open('our_data_y_basic.csv', 'w') as f:
+    print("LOAD our_data_y.csv")
+    for n in y_train:
+        f.write(str(n) + '\n')
+
+with open('our_data_x_basic.csv', 'w') as f:
+    print("LOAD our_data_x_kmeans.csv")
+    for img in x_train:
+        f.write(','.join(map(str, img.flatten().tolist())) + '\n')
