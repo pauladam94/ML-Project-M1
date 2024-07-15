@@ -201,15 +201,27 @@ def load_info_data_set(transformation):
 def denoise(img):
     img_ = convol(convol(convol(img2BW(img),ker3),ker5),ker3)
     return (np.squeeze(img_))
-"""
+    
+#load_info_data_set([denoise])
+    
+
+#load_info_data_set([
+#    lambda img : kmeans(convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3), 2),
+#    lambda img : convol(convol(convol(convol(img2BW(img),ker3),ker5),ker5),ker3)
+#])
+
+
+
 with open('our_data_y.csv', 'w') as f:
-    print("LOAD our_data_y.csv")
+    i = 0
     for n in y_train:
         for _ in range(5):
             f.write(str(n) + '\n')
+        print(i)
+        i += 5
 
+    
 with open('our_data_x.csv', 'w') as f:
-    print("LOAD our_data_x.csv")
     i = 0
     for img in x_train:
         img_ = denoise(img)

@@ -42,4 +42,3 @@ def load_info_data_set():
 
 
 
-load_info_data_set()
